@@ -1,4 +1,8 @@
-module.exports.toHtmlFormat = function toHtmlFormat(message) {
+const { AI_SERVER_VN, AI_SERVER_GLOBAL } = require("../consts/ai_server");
+const { mainAI, mainUtils } = require("../services/main__ai"); // main AI
+const { secondaryAI, secondaryUtils } = require("../services/secondary_ai"); // secondary AI
+
+function toHtmlFormat(message) {
     message = message
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -28,8 +32,30 @@ module.exports.toHtmlFormat = function toHtmlFormat(message) {
     //wrap content in ` ` into <pre><code></code></pre>
     html = html.replace(
         /`([^`]+)`/g,
-        "<pre style='display : inline !important'><code style='display: inline; background: none; padding : 1px; font-style: italic;'>$1</code></pre>"
+        "<pre style='display : inline !important'><code style='display: inline; padding : 1px; font-style: italic;'>$1</code></pre>"
     );
 
     return `<div>${html}<div/>`;
+}
+
+module.exports.getHtmlResponeFromPayload = async function (payload, server = AI_SERVER_VN) {
+    const hightlightStyle = "androidstudio";
+    const hightlightScript = `<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/${hightlightStyle}.min.css"><script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script><script>hljs.highlightAll();</script>`;
+
+    switch (server) {
+        case AI_SERVER_VN: {
+            let data = await mainAI.getAIAnswer(mainUtils.getQuestion(payload));
+            let message = mainUtils.getMessageFromData(data);
+            let html = `${hightlightScript} ${toHtmlFormat(message)}`;
+            return html;
+        }
+        case AI_SERVER_GLOBAL: {
+            let data = await secondaryAI.getAIAnswer(secondaryUtils.getQuestion(payload));
+            let message = secondaryUtils.getMessageFromData(data);
+            let html = `${hightlightScript} ${toHtmlFormat(message)}`;
+            return html;
+        }
+        default:
+            return new Error("Can not find ai server");
+    }
 }

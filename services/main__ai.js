@@ -40,7 +40,7 @@ class Utils {
       }
     });
 
-    return message;
+    return "from:gptservervn \n" + message;
   }
 
 }
@@ -70,6 +70,10 @@ class AI {
     })
       .then((res) => res.text())
       .then((text) => text.split("\n"));
+  }
+
+  static async createChatRoom() {
+
   }
 }
 
